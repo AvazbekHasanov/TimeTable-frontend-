@@ -1,0 +1,13 @@
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+:root {
+  --fc-event-bg-color: rgb(255, 204, 179); /* Set your custom background color */
+  --fc-event-text-color: rgb(0, 0, 0);
+}
