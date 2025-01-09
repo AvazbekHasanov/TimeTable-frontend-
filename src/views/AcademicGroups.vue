@@ -13,29 +13,20 @@
           <th>Fan nomi</th>
           <th>Akademik guruh nomi</th>
           <th>O'quvchi soni</th>
+          <th> O'tiladigan kunlar </th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="(course, index) in courseList" :key="course.id">
           <td>{{ index + 1 }}</td>
           <td>{{ course.course_name }}</td>
-          <td>
-            <div v-if="!course.teacher_id">
-              <select v-model="selectedTeachers[index]" @change="assignTeacher(index)" class="teacher-select">
-                <option disabled value="">Select a teacher</option>
-                <option v-for="teacher in course.teachers" :key="teacher.teacher_id" :value="teacher.teacher_id">
-                  {{ teacher.name }}
-                </option>
-              </select>
-            </div>
-            <div v-else>
-              <p class="teacher-name">{{ course.teacher_name }}</p>
-            </div>
+          <td>{{ course.academic_group_name }}</td>
+          <td>{{ course.student_count }}</td>
+          <td v-if="course.weekdays">{{ course.weekdays }}
+            <img src="../public/icons/icons8-add-50.png" height="50" width="50" alt="test" @click="addToSchedule(course)"/>
           </td>
-          <td>
-            <div>
-              <button v-if="course.teacher_id" @click="toggleEditTeacher(index, true)" class="action-button">O'qituvchini almashtirish</button>
-            </div>
+          <td v-else style="display: flex; justify-content: center">
+            <img src="../public/icons/icons8-add-50.png" height="50" width="50" alt="test" @click="addToSchedule(course)"/>
           </td>
         </tr>
         </tbody>
@@ -66,6 +57,45 @@
       </form>
     </div>
   </div>
+
+  <div v-if="isShowWeekdaysModal" class="modal-overlay">
+    <div class="modal-content" style="width: 45vw !important;">
+      <div class="subject-schedule">
+        <h3 class="modal-title">{{ `${editedCourse.course_name} (${editedCourse.academic_group_name}) fanni dars jadvaliga qo'shish` }}</h3>
+
+        <!-- Loop through each row to show weekday and type selection -->
+        <div class="list-group">
+          <div v-for="(schedule, index) in subjectSchedules" :key="index" class="schedule-row">
+            <select v-model="schedule.day" class="select" >
+              <option disabled value="">Hafta kuni</option>
+              <option v-for="day in weekdays" :key="day.id" :value="day.id">{{ day.name }}</option>
+            </select>
+            <select v-model="schedule.type" class="select" >
+              <option disabled value="">Dars turrini tanlang</option>
+              <option value="LECTURE">Ma'ruza</option>
+              <option value="PRACTICAL">Amaliyot</option>
+            </select>
+            <select v-model="schedule.slot_id" class="select">
+              <option v-for="slot in slots" :key="slot" :value="slot">{{ slot }}</option>
+            </select>
+            <input type="text" v-model="schedule.classroom" placeholder="Xona raqami (A 301)">
+
+            <button @click="removeRow(index)" class="remove-row-btn">×</button>
+
+          </div>
+          <button type="submit" class="save-btn" @click="addRow">Qator qo'shish</button>
+        </div>
+
+
+        <!-- Display result -->
+        <div class="form-actions" style="margin-top: 4rem">
+          <button type="submit" class="save-btn" @click="saveSchedule">Saqlash</button>
+          <button type="button" class="cancel-btn" @click="closeScheduleModal">Bekor qilish</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </template>
 
 <script>
@@ -90,19 +120,71 @@ export default defineComponent({
         teacher_name: null,
         name: null,
         course_id: null,
-      }
+      },
+      isShowWeekdaysModal: false,
+      editedCourse: {
+      },
+      weekdays: [
+        { name: "Dushanba", id: 1 },
+        { name: "Seshanba", id: 2 },
+        { name: "Chorshanba", id: 3 },
+        { name: "Payshanba", id: 4 },
+        { name: "Juma", id: 5 },
+        { name: "Shanba", id: 6 },
+        { name: "Yakshanba", id: 7 }
+      ],
+      subjectSchedules: [{id:null, day: '', type: '' , slot_id: '', classroom: ''}],
+      slots: [1, 2, 3, 4, 5, 6],
     };
   },
+  computed: {
 
+  },
   mounted() {
-    fetch('http://localhost:3000/academic/groups', {}).then(res => res.json()).then(res => {
-      this.courses = res.result
-    });
+    this.getData();
   },
   methods: {
-    addAcademicGroup(courseIndex) {
+    // Add a new row to the schedule
+    addRow() {
+      this.subjectSchedules.push({id: null, day: '', type: '', slot_id: '' , classroom: ''});
+    },
+    closeScheduleModal(){
+      this.isShowWeekdaysModal = false;
+    },
+    // Remove a row from the schedule
+    removeRow(index) {
+      if (this.subjectSchedules[index].id){
+        fetch('http://localhost:3000/delete/curriculum', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({id: this.subjectSchedules[index].id})
+        }).then(res => res.json()).then((res) => {
+          console.log(res);
+          this.subjectSchedules.splice(index, 1);
+        })
+      }else{
+        this.subjectSchedules.splice(index, 1);
+      }
 
-      console.log(this.newAcademicGroup);
+    },
+    getData() {
+      fetch('http://localhost:3000/academic/groups', {}).then(res => res.json()).then(res => {
+        this.courseList = res.result
+      });
+    },
+    addToSchedule(course) {
+      fetch(`http://localhost:3000/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
+       if (res.result.length>0)  this.subjectSchedules = res.result
+      })
+      this.isShowWeekdaysModal = true;
+      this.editedCourse = course;
+    },
+    addWeekdays(course) {
+      this.isShowWeekdaysModal = false
+    },
+    addAcademicGroup() {
       fetch('http://localhost:3000/academic/group/add', {
         method: 'POST',
         headers: {
@@ -116,6 +198,8 @@ export default defineComponent({
         .then((res) => res.json())
         .then((res) => {
           console.log('Response:', res)
+          this.getData();
+          this.showModal = false
         })
         .catch((err) => console.error('Error:', err));
       },
@@ -140,6 +224,23 @@ export default defineComponent({
         console.log('Response:', res)
       })
         .catch((err) => console.error('Error:', err));
+    },
+    saveSchedule(){
+      console.log(this.editedCourse, this.subjectSchedules);
+      fetch('http://localhost:3000/schedule/add-event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          days: this.subjectSchedules,
+          id: this.editedCourse.id,
+          course_id: this.editedCourse.course_id
+        })
+      }).then(res => res.json()).then((res) => {
+        console.log('Response:', res)
+        this.closeScheduleModal()
+      })
     },
 
   },
@@ -198,28 +299,7 @@ export default defineComponent({
   font-weight: bold;
 }
 
-.teacher-select {
-  width: 100%;
-  padding: 5px;
-  font-size: 14px;
-}
 
-.action-button {
-  background-color: #007bff;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.action-button:hover {
-  background-color: #0056b3;
-}
-
-.teacher-name {
-  font-weight: bold;
-}
 
 /* Modal styles */
 .modal-overlay {
@@ -296,6 +376,85 @@ export default defineComponent({
 
 .cancel-btn:hover {
   background-color: #e53935;
+}
+
+
+/* Darsni qaysi kun o'tislishi */
+.schedule-row{
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+.subject-schedule {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.label {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.input,
+.select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-label {
+  font-size: 14px;
+}
+
+.result {
+  margin-top: 20px;
+  background: #ffffff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.result h2 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.result p {
+  font-size: 14px;
+  color: #555;
+}
+.list-group{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 </style>
 
