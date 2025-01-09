@@ -22,9 +22,6 @@ export default defineComponent({
     });
   },
   methods: {
-    co() {
-      return co
-    },
     assignTeacher(courseIndex) {
       const teacherId = this.selectedTeachers[courseIndex];
       this.courseList[courseIndex].teacher_id = teacherId;

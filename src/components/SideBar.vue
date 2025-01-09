@@ -7,6 +7,9 @@
     <div class="sidebar-section">
       <h2 class="sidebar-header">Menyular</h2>
       <ul class="sidebar-menu">
+        <li><router-link to="/teachers" class="menu-link">O'qituvchilar</router-link></li>
+        <li><router-link to="/courses" class="menu-link">Fanlar</router-link></li>
+        <li><router-link to="/academic_group" class="menu-link">Akademik guruhlar</router-link></li>
         <li><router-link to="/" class="menu-link">TimeTable</router-link></li>
         <li><router-link to="/teacher-schedule" class="menu-link">O'qituvchilar dars jadvali</router-link></li>
         <li><router-link to="/add-teacher" class="menu-link">Darsga o'qituvchi biriktirish</router-link></li>
