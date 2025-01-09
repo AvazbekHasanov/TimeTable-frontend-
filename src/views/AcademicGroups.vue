@@ -101,7 +101,7 @@
 <script>
 import {defineComponent} from 'vue';
 import SideBar from "../components/SideBar.vue";
-import courses from "./Courses.vue";
+import { inject } from "vue";
 
 
 export default defineComponent({
@@ -135,12 +135,14 @@ export default defineComponent({
       ],
       subjectSchedules: [{id:null, day: '', type: '' , slot_id: '', classroom: ''}],
       slots: [1, 2, 3, 4, 5, 6],
+      baseUrl: null
     };
   },
   computed: {
 
   },
   mounted() {
+    this.baseUrl = inject("baseUrl");
     this.getData();
   },
   methods: {
@@ -154,7 +156,7 @@ export default defineComponent({
     // Remove a row from the schedule
     removeRow(index) {
       if (this.subjectSchedules[index].id){
-        fetch('http://localhost:3000/delete/curriculum', {
+        fetch(`${this.baseUrl}/delete/curriculum`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -170,12 +172,12 @@ export default defineComponent({
 
     },
     getData() {
-      fetch('http://localhost:3000/academic/groups', {}).then(res => res.json()).then(res => {
+      fetch(`${this.baseUrl}/academic/groups`, {}).then(res => res.json()).then(res => {
         this.courseList = res.result
       });
     },
     addToSchedule(course) {
-      fetch(`http://localhost:3000/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
+      fetch(`${this.baseUrl}/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
        if (res.result.length>0)  this.subjectSchedules = res.result
       })
       this.isShowWeekdaysModal = true;
@@ -185,7 +187,7 @@ export default defineComponent({
       this.isShowWeekdaysModal = false
     },
     addAcademicGroup() {
-      fetch('http://localhost:3000/academic/group/add', {
+      fetch(`${this.baseUrl}/academic/group/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -205,13 +207,13 @@ export default defineComponent({
       },
     openModal(){
       this.showModal = true;
-      fetch('http://localhost:3000/course/list/admin').then(response => response.json()).then((data) => {
+      fetch(`${this.baseUrl}/course/list/admin`).then(response => response.json()).then((data) => {
         this.courses = data
       })
     },
     toggleEditTeacher(index, status) {
       this.courseList[index].teacher_id = null;
-      fetch('http://localhost:3000/remove-teacher', {
+      fetch(`${this.baseUrl}/remove-teacher`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -227,7 +229,7 @@ export default defineComponent({
     },
     saveSchedule(){
       console.log(this.editedCourse, this.subjectSchedules);
-      fetch('http://localhost:3000/schedule/add-event', {
+      fetch(`${this.baseUrl}/schedule/add-event`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

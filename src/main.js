@@ -17,5 +17,6 @@ const i18n = createI18n({
     uz
   }
 });
+// http://localhost:3000"
 
-createApp(DemoApp).use(i18n).use(router).mount('#app')
+createApp(DemoApp).use(i18n).provide("baseUrl",  "https://timetable-backend-a5bm.onrender.com" ).use(router).mount('#app')
