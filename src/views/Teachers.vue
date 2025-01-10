@@ -50,6 +50,7 @@
 
 <script>
 import SideBar from "../components/SideBar.vue";
+import {inject} from "vue";
 
 export default {
   components: {SideBar},
@@ -62,17 +63,19 @@ export default {
         teacher_name: "",
         degree: ''
       },
+      baseUrl: null
     };
   },
   mounted() {
-    fetch('http://localhost:3000/teacher/list/admin').then(response => response.json()).then((data) => {
+    this.baseUrl = inject("baseUrl");
+    fetch(`${this.baseUrl}/teacher/list/admin`).then(response => response.json()).then((data) => {
       this.teachers = data
     })
   },
   methods: {
     addTeacher() {
       const newId = this.teachers.length + 1;
-      fetch('http://localhost:3000/teacher/add', {
+      fetch(`${this.baseUrl}/teacher/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

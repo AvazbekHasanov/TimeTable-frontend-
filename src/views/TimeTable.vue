@@ -1,5 +1,5 @@
 <script>
-import {defineComponent} from 'vue';
+import {defineComponent, inject} from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -73,16 +73,18 @@ export default defineComponent({
         left: "0px",
         top: "0px",
       },
+      baseUrl: null
     };
   },
 
   mounted() {
+    this.baseUrl = inject("baseUrl");
     this.getTimeTableData();
   },
   methods: {
     getTimeTableData(){
       this.showCalendar = false;
-      fetch('http://localhost:3000/student/timetable')
+      fetch(`${this.baseUrl}/student/timetable`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

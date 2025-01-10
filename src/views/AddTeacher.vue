@@ -1,5 +1,5 @@
 <script>
-import {defineComponent} from 'vue';
+import {defineComponent, inject} from 'vue';
 import SideBar from "../components/SideBar.vue";
 
 
@@ -12,11 +12,13 @@ export default defineComponent({
     return {
       courseList: [],
       selectedTeachers: [],
+      baseUrl: null
     };
   },
 
   mounted() {
-    fetch('http://localhost:3000/api/add/teacher', {}).then(res => res.json()).then(res => {
+    this.baseUrl = inject("baseUrl");
+    fetch(`${this.baseUrl}/api/add/teacher`, {}).then(res => res.json()).then(res => {
       console.log(res)
       this.courseList = res.result
     });
@@ -30,7 +32,7 @@ export default defineComponent({
       const selectedTeacher = this.courseList[courseIndex].teachers.find(
         (teacher) => teacher.teacher_id === teacherId
       );
-      fetch('http://localhost:3000/add-teacher', {
+      fetch(`${this.baseUrl}/add-teacher`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +50,7 @@ export default defineComponent({
     },
     toggleEditTeacher(index, status) {
       this.courseList[index].teacher_id = null;
-      fetch('http://localhost:3000/remove-teacher', {
+      fetch(`${this.baseUrl}/remove-teacher`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
