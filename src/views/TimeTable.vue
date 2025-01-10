@@ -249,6 +249,9 @@ export default defineComponent({
     },
     switchLocale(locale) {
       this.$i18n.locale = locale;
+    },
+    download(){
+      window.open(`${this.baseUrl}/download-schedule`, '_blank');
     }
   },
   beforeUnmount() {
@@ -277,6 +280,7 @@ export default defineComponent({
     <div class="demo-app-main">
       <!--      <button @click="switchLocale('uz')">Switch to Uzbek</button>-->
       <!--      <button @click="switchLocale('en')">Switch to English</button>-->
+      <button class="euenJR" @click="download">  Yuklab Olish </button>
       <FullCalendar
         v-if="showCalendar"
         class="demo-app-calendar"
@@ -330,6 +334,33 @@ export default defineComponent({
 
 <style lang='css' scoped>
 
+
+.euenJR {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: inline-flex;
+  cursor: pointer;
+  max-width: 100%;
+  width: 150px;
+  height: 60px;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  border: 2px solid rgb(138, 0, 25);
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  border-radius: 0px;
+  transition: color 150ms ease-in-out, background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+  background-color: rgb(255, 255, 255);
+  color: rgb(138, 0, 25);
+}
+.euenJR:hover {
+  background-color: rgb(138, 0, 25);
+  border-color: rgb(138, 0, 25);
+  color: rgb(255, 255, 255);
+}
 h2 {
   margin: 0;
   font-size: 16px;

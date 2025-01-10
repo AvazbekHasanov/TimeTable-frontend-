@@ -258,6 +258,9 @@ export default defineComponent({
     },
     switchLocale(locale) {
       this.$i18n.locale = locale;
+    },
+    download(){
+      window.open(`${this.baseUrl}/download-schedule?teacher_id=${this.selectedTeacher.teacher_id}`, '_blank');
     }
   },
   beforeUnmount() {
@@ -274,19 +277,22 @@ export default defineComponent({
 
     <!-- Main Calendar -->
     <div class="demo-app-main">
-      <div class="dropdown-container">
-        <label for="teacher-select" class="dropdown-label"> O'qituvchi dars jadvali </label>
-        <select
-          id="teacher-select"
-          v-model="selectedTeacher.teacher_id"
-          @change="teacherSelected"
-          class="dropdown-select"
-        >
-          <option disabled value="">O'qituvchini tanlangr</option>
-          <option v-for="teacher in teacherList" :key="teacher.teacher_id" :value="teacher.teacher_id">
-            {{ teacher.teacher_name }}
-          </option>
-        </select>
+      <div class="dropdown-container-top">
+        <div class="dropdown-container">
+          <label for="teacher-select" class="dropdown-label"> O'qituvchi dars jadvali </label>
+          <select
+            id="teacher-select"
+            v-model="selectedTeacher.teacher_id"
+            @change="teacherSelected"
+            class="dropdown-select"
+          >
+            <option disabled value="">O'qituvchini tanlangr</option>
+            <option v-for="teacher in teacherList" :key="teacher.teacher_id" :value="teacher.teacher_id">
+              {{ teacher.teacher_name }}
+            </option>
+          </select>
+        </div>
+        <button class="euenJR" @click="download">  Yuklab Olish </button>
       </div>
       <FullCalendar
         v-if="showCalendar"
@@ -340,7 +346,32 @@ export default defineComponent({
 
 
 <style lang='css' scoped>
-
+.euenJR {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: inline-flex;
+  cursor: pointer;
+  max-width: 100%;
+  width: 150px;
+  height: 60px;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  border: 2px solid rgb(138, 0, 25);
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  border-radius: 0px;
+  transition: color 150ms ease-in-out, background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+  background-color: rgb(255, 255, 255);
+  color: rgb(138, 0, 25);
+}
+.euenJR:hover {
+  background-color: rgb(138, 0, 25);
+  border-color: rgb(138, 0, 25);
+  color: rgb(255, 255, 255);
+}
 h2 {
   margin: 0;
   font-size: 16px;
@@ -409,9 +440,16 @@ body {
   position: relative;
 }
 
+.dropdown-container-top{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center;
+}
+
 .dropdown-container {
   width: 300px;
-  margin: 20px auto;
+  margin: 20px 20px;
   font-family: Arial, sans-serif;
 }
 

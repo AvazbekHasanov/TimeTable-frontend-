@@ -18,5 +18,5 @@ const i18n = createI18n({
   }
 });
 // http://localhost:3000"
-
-createApp(DemoApp).use(i18n).provide("baseUrl",  "https://timetable-backend-a5bm.onrender.com" ).use(router).mount('#app')
+// https://timetable-backend-a5bm.onrender.com
+createApp(DemoApp).use(i18n).provide("baseUrl",  "http://localhost:3000" ).use(router).mount('#app')
