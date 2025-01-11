@@ -14,6 +14,7 @@
           <th>Akademik guruh nomi</th>
           <th>O'quvchi soni</th>
           <th> O'tiladigan kunlar </th>
+          <th>Amallar</th>
         </tr>
         </thead>
         <tbody>
@@ -28,6 +29,8 @@
           <td v-else style="display: flex; justify-content: center">
             <img src="../public/icons/icons8-add-50.png" height="50" width="50" alt="test" @click="addToSchedule(course)"/>
           </td>
+
+          <td> <trash @click="deleteGroup(course, index)"/> </td>
         </tr>
         </tbody>
       </table>
@@ -102,10 +105,12 @@
 import {defineComponent} from 'vue';
 import SideBar from "../components/SideBar.vue";
 import { inject } from "vue";
+import Trash from "../public/icons/trash.vue";
 
 
 export default defineComponent({
   components: {
+    Trash,
     SideBar
 
   },
@@ -243,6 +248,23 @@ export default defineComponent({
         console.log('Response:', res)
         this.closeScheduleModal()
       })
+    },
+    deleteGroup(course, index){
+      if (confirm("O'chirmoqchimisiz ?")) {
+        fetch(`${this.baseUrl}/delete/item`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: 'group',
+            id: course.id
+          })
+        }).then(response => response.json()).then((data) => {
+          this.courseList.splice(index, 1);
+        })
+
+      }
     },
 
   },

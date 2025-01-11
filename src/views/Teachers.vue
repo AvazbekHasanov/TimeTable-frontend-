@@ -10,6 +10,7 @@
           <th>To'liq ism</th>
           <th>Daraja</th>
           <th>Qo'shilgan sana</th>
+          <th>Amallar</th>
         </tr>
         </thead>
         <tbody>
@@ -18,6 +19,7 @@
           <td>{{ teacher.teacher_name }}</td>
           <td>{{ teacher.degree }}</td>
           <td>{{ teacher.created_at }}</td>
+          <td> <trash @click="deleteTeacher(teacher, index)"/> </td>
         </tr>
         </tbody>
       </table>
@@ -51,9 +53,10 @@
 <script>
 import SideBar from "../components/SideBar.vue";
 import {inject} from "vue";
+import Trash from "../public/icons/trash.vue";
 
 export default {
-  components: {SideBar},
+  components: {Trash, SideBar},
   data() {
     return {
       showModal: false,
@@ -96,9 +99,21 @@ export default {
     editTeacher(id) {
       alert(`Edit teacher with ID: ${id}`);
     },
-    deleteTeacher(id) {
-      if (confirm('Are you sure you want to delete this teacher?')) {
-        this.teachers = this.teachers.filter((teacher) => teacher.id !== id);
+    deleteTeacher(teacher, index) {
+      if (confirm("Haqiqatdanham o'chirmoqchimisiz ?")) {
+        fetch(`${this.baseUrl}/delete/item`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            type: 'teacher',
+            id: teacher.id
+          })
+        }).then(response => response.json()).then((data) => {
+          this.teachers.splice(index, 1);
+        })
+
       }
     },
   },
