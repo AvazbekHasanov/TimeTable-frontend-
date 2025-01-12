@@ -57,9 +57,10 @@ export default defineComponent({
         selectMirror: true,
         dayMaxEvents: true,
         weekends: true,
-        slotMinTime: '09:00:00', // Start time at 9:00 AM
-        slotMaxTime: '22:00:00', // End time at 6:00 PM
-        slotDuration: '00:30:00', // Each slot is 30 minutes
+        slotMinTime: "08:30:00", // First slot starts at 8:30
+        slotMaxTime: "22:00:00", // Adjust end time for your slots
+        slotDuration: "01:35:00", // Duration for each slot
+        slotLabelContent: (args) => this.getSlotLabel(args.date),
         slotLabelFormat: {
           hour: '2-digit',
           minute: '2-digit',
@@ -94,6 +95,49 @@ export default defineComponent({
     this.getTeacherList()
   },
   methods: {
+    getSlotLabel(date) {
+      // Ensure the input is a valid Date object
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error("Invalid date input:", date);
+        return "";
+      }
+
+      // Extract time in HH:mm format (local time)
+      const timeString = `${date.getHours().toString().padStart(2, "0")}:${date
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Check if the time falls within lunch break (13:00 - 13:30)
+      if (timeString >= "13:00" && timeString < "13:30") {
+        return "";
+      }
+
+      // Custom slot mappings
+      const slotTimes = [
+        { start: "08:30", end: "09:50", slot: 1 },
+        { start: "10:05", end: "11:25", slot: 2 },
+        { start: "11:40", end: "13:00", slot: 3 },
+        { start: "13:30", end: "14:50", slot: 4 },
+        { start: "15:05", end: "16:25", slot: 5 },
+        { start: "16:40", end: "18:00", slot: 6 },
+        { start: "18:15", end: "19:35", slot: 7 },
+        { start: "19:50", end: "21:10", slot: 8 },
+      ];
+
+      // Find the matching slot
+      const foundSlot = slotTimes.find((slot) => {
+        const slotStart = slot.start;
+        const slotEnd = slot.end;
+        console.log("timeString", timeString, "slotStart",slotStart, "timeString", timeString)
+        return timeString >= slotStart && timeString <= slotEnd;
+      });
+
+      // Return slot label (if found) or an empty string
+      const sl = foundSlot ? `${foundSlot.slot}-para` : null;
+      console.log("Slot label:", sl, foundSlot, date);
+      return sl??date;
+    },
     async getTeacherList(){
       await fetch(`${this.baseUrl}/teacher/list`).then((response) => {
         if (!response.ok) {
