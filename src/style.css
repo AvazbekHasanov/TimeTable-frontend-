@@ -11,3 +11,10 @@ body,
   --fc-event-bg-color: rgb(255, 204, 179); /* Set your custom background color */
   --fc-event-text-color: rgb(0, 0, 0);
 }
+
+.fc-event-main i {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
