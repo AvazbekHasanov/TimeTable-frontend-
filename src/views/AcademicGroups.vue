@@ -144,7 +144,7 @@ export default defineComponent({
         { name: "Yakshanba", id: 7 }
       ],
       subjectSchedules: [{id:null, day: '', type: '' , slot_id: '', classroom: ''}],
-      slots: [1, 2, 3, 4, 5, 6],
+      slots: [1, 2, 3, 4, 5, 6, 7, 8],
       baseUrl: null
     };
   },
