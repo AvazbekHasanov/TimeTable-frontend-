@@ -24,7 +24,7 @@ export default defineComponent({
           name:'XMZSJ1'
         }
       ],
-      group: '',
+      group: 1,
       calendarOptions: {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
         buttonText: {
