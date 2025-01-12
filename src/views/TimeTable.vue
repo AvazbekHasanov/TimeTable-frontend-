@@ -14,6 +14,17 @@ export default defineComponent({
   data() {
     return {
       showCalendar: false,
+      groupList: [
+        {
+          id: 1,
+          name:'AS1'
+        },
+        {
+          id: 2,
+          name:'XMZSJ1'
+        }
+      ],
+      group: '',
       calendarOptions: {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
         buttonText: {
@@ -105,37 +116,37 @@ export default defineComponent({
 
       // Custom slot mappings
       const slotTimes = [
-        { start: "08:30", end: "09:50", slot: 1 },
-        { start: "10:05", end: "11:25", slot: 2 },
-        { start: "11:40", end: "13:00", slot: 3 },
-        { start: "13:30", end: "14:50", slot: 4 },
-        { start: "15:05", end: "16:25", slot: 5 },
-        { start: "16:40", end: "18:00", slot: 6 },
-        { start: "18:15", end: "19:35", slot: 7 },
-        { start: "19:50", end: "21:10", slot: 8 },
+        {start: "08:30", end: "09:50", slot: 1},
+        {start: "10:05", end: "11:25", slot: 2},
+        {start: "11:40", end: "13:00", slot: 3},
+        {start: "13:30", end: "14:50", slot: 4},
+        {start: "15:05", end: "16:25", slot: 5},
+        {start: "16:40", end: "18:00", slot: 6},
+        {start: "18:15", end: "19:35", slot: 7},
+        {start: "19:50", end: "21:10", slot: 8},
       ];
 
       // Find the matching slot
       const foundSlot = slotTimes.find((slot) => {
         const slotStart = slot.start;
         const slotEnd = slot.end;
-        console.log("timeString", timeString, "slotStart",slotStart, "timeString", timeString)
+        console.log("timeString", timeString, "slotStart", slotStart, "timeString", timeString)
         return timeString >= slotStart && timeString <= slotEnd;
       });
 
       // Return slot label (if found) or an empty string
       const sl = foundSlot ? `${foundSlot.slot}-para` : null;
       console.log("Slot label:", sl, foundSlot, date);
-      return sl??date;
+      return sl ?? date;
     },
 
-
-
-
-
-    getTimeTableData(){
+    groupSelected(){
+      this.getTimeTableData()
+    },
+    getTimeTableData() {
       this.showCalendar = false;
-      fetch(`${this.baseUrl}/student/timetable`)
+      let url = this.group? `${this.baseUrl}/student/timetable?student_id=${this.group}`:`${this.baseUrl}/student/timetable`
+      fetch(url)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -233,7 +244,7 @@ export default defineComponent({
       }
       this.showDetails = true;
 
-      const { clientX, clientY } = clickInfo.jsEvent; // Get the click position
+      const {clientX, clientY} = clickInfo.jsEvent; // Get the click position
       const windowCenterY = window.innerHeight / 2; // Calculate the vertical center of the viewport
       console.log("clickInfo.event", clickInfo.event);
 
@@ -258,7 +269,7 @@ export default defineComponent({
 
         if (!modal) {
           console.error('Modal element not found');
-          return { left: '0px', top: '0px' };
+          return {left: '0px', top: '0px'};
         }
 
         // Get modal dimensions (use numeric values, not strings)
@@ -287,11 +298,9 @@ export default defineComponent({
         }
 
         // Set the modal position
-        this.modalPosition = { left: `${left}px`, top: `${top}px` };
+        this.modalPosition = {left: `${left}px`, top: `${top}px`};
       });
     },
-
-
 
 
     handleEvents(events) {
@@ -301,7 +310,7 @@ export default defineComponent({
     switchLocale(locale) {
       this.$i18n.locale = locale;
     },
-    download(){
+    download() {
       window.open(`${this.baseUrl}/download-schedule`, '_blank');
     }
   },
@@ -315,20 +324,34 @@ export default defineComponent({
 <template>
   <div class="demo-app">
     <!-- Sidebar -->
-<!--    <div class="sidebar">-->
-<!--      <div class="sidebar-section">-->
-<!--        <h2 class="sidebar-header">Menyular</h2>-->
-<!--        <ul class="sidebar-menu">-->
-<!--          <li><router-link to="/" class="menu-link">TimeTable</router-link></li>-->
-<!--          <li><router-link to="/add-teacher" class="menu-link">Darsga o'qituvchi biriktirish</router-link></li>-->
-<!--        </ul>-->
-<!--      </div>-->
-<!--    </div>-->
+    <!--    <div class="sidebar">-->
+    <!--      <div class="sidebar-section">-->
+    <!--        <h2 class="sidebar-header">Menyular</h2>-->
+    <!--        <ul class="sidebar-menu">-->
+    <!--          <li><router-link to="/" class="menu-link">TimeTable</router-link></li>-->
+    <!--          <li><router-link to="/add-teacher" class="menu-link">Darsga o'qituvchi biriktirish</router-link></li>-->
+    <!--        </ul>-->
+    <!--      </div>-->
+    <!--    </div>-->
 
     <SideBar></SideBar>
 
     <!-- Main Calendar -->
     <div class="demo-app-main">
+      <div style="width: 100%; display: flex; justify-content: center;">
+        <select
+          id="teacher-select"
+          v-model="group"
+          @change="groupSelected"
+          class="dropdown-select"
+        >
+          <option disabled value="">Guruhni tanlang</option>
+          <option v-for="teacher in groupList" :key="teacher.id" :value="teacher.id">
+            {{ teacher.name }}
+          </option>
+        </select>
+      </div>
+
       <FullCalendar
         v-if="showCalendar"
         class="demo-app-calendar"
@@ -410,14 +433,12 @@ b { /* used for event dates/times */
 }
 
 
-
 .demo-app-main {
   flex-grow: 1;
   padding: 3em;
   overflow-y: scroll;
   width: 100%;
 }
-
 
 
 .event-details {
@@ -437,6 +458,54 @@ b { /* used for event dates/times */
 
 body {
   position: relative;
+}
+/* Select styling */
+.dropdown-select {
+  place-items: center;
+  width: 50%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  outline: none;
+  appearance: none; /* Hides the default arrow in some browsers */
+  cursor: pointer;
+}
+
+/* Add custom arrow */
+.dropdown-select::-ms-expand {
+  display: none;
+}
+
+.dropdown-select::after {
+  content: '';
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #333;
+}
+
+/* Hover and focus styles */
+.dropdown-select:hover {
+  border-color: #888;
+}
+
+.dropdown-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Disabled option styling */
+.dropdown-select option:disabled {
+  color: #aaa;
 }
 
 </style>
