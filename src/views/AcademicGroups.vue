@@ -188,7 +188,11 @@ export default defineComponent({
     },
    async addToSchedule(course) {
      await fetch(`${this.baseUrl}/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
-       if (res.result.length>0)  this.subjectSchedules = res.result
+       if (res.result.length>0)  {
+         this.subjectSchedules = res.result
+       }else {
+         this.subjectSchedules = []
+       }
       })
      await fetch(`${this.baseUrl}/classroom/list/admin`, {}).then(res => res.json()).then(res => {
        this.classrooms =  res.classrooms
