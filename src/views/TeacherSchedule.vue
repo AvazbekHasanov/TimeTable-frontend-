@@ -58,7 +58,7 @@ export default defineComponent({
         dayMaxEvents: true,
         weekends: true,
         slotMinTime: '09:00:00', // Start time at 9:00 AM
-        slotMaxTime: '18:00:00', // End time at 6:00 PM
+        slotMaxTime: '22:00:00', // End time at 6:00 PM
         slotDuration: '00:30:00', // Each slot is 30 minutes
         slotLabelFormat: {
           hour: '2-digit',
