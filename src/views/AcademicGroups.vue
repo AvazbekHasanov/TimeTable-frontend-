@@ -79,9 +79,13 @@
               <option value="PRACTICAL">Amaliyot</option>
             </select>
             <select v-model="schedule.slot_id" class="select">
+              <option disabled value="">Para</option>
               <option v-for="slot in slots" :key="slot" :value="slot">{{ slot }}</option>
             </select>
-            <input type="text" v-model="schedule.classroom" placeholder="Xona raqami (A 301)">
+            <select v-model="schedule.classroom" class="select">
+              <option disabled value="">Xonani tanlang</option>
+              <option v-for="classroom in classrooms" :key="classroom.name" :value="classroom.name">{{ classroom.name }}</option>
+            </select>
 
             <button @click="removeRow(index)" class="remove-row-btn">×</button>
 
@@ -129,6 +133,7 @@ export default defineComponent({
       isShowWeekdaysModal: false,
       editedCourse: {
       },
+      classrooms: [],
       weekdays: [
         { name: "Dushanba", id: 1 },
         { name: "Seshanba", id: 2 },
@@ -181,10 +186,13 @@ export default defineComponent({
         this.courseList = res.result
       });
     },
-    addToSchedule(course) {
-      fetch(`${this.baseUrl}/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
+   async addToSchedule(course) {
+     await fetch(`${this.baseUrl}/academic/group/schedule?group_id=${course.id}`).then(res => res.json()).then(res => {
        if (res.result.length>0)  this.subjectSchedules = res.result
       })
+     await fetch(`${this.baseUrl}/classroom/list/admin`, {}).then(res => res.json()).then(res => {
+       this.classrooms =  res.classrooms
+     })
       this.isShowWeekdaysModal = true;
       this.editedCourse = course;
     },

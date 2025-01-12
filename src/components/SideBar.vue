@@ -9,6 +9,7 @@
       <ul class="sidebar-menu">
         <li><router-link to="/teachers" class="menu-link">O'qituvchilar</router-link></li>
         <li><router-link to="/courses" class="menu-link">Fanlar</router-link></li>
+        <li> <router-link to="/classrooms" class="menu-link"> Auditoriyalar </router-link> </li>
         <li><router-link to="/academic_group" class="menu-link">Akademik guruhlar</router-link></li>
         <li><router-link to="/" class="menu-link">TimeTable</router-link></li>
         <li><router-link to="/teacher-schedule" class="menu-link">O'qituvchilar dars jadvali</router-link></li>

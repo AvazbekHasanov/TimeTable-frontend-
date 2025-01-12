@@ -148,7 +148,6 @@ export default defineComponent({
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   overflow-y: auto; /* Enables vertical scrolling */
   height: 100vh; /* Ensures it takes the full viewport height */
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif
 }
 
 .sidebar {
@@ -195,7 +194,7 @@ export default defineComponent({
 
 /* Adjust Main Content */
 .courses-container {
-  width: calc(85% - 2rem);
+  width: 100%;
   margin-right: 1rem;
   overflow-y: scroll;
   height: 100vh;

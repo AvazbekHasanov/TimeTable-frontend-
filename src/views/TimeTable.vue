@@ -21,6 +21,7 @@ export default defineComponent({
           month: 'oy',
           week: 'hafta',
           day: 'kun',
+          download: "Yuklab olish"
         },
         // titleFormat: {
         //   year: 'numeric',
@@ -31,7 +32,13 @@ export default defineComponent({
           // left: 'prev,next today',
           left: 'today',
           center: 'title',
-          right: 'timeGridWeek,timeGridDay',
+          right: 'timeGridWeek,timeGridDay download',
+        },
+        customButtons: {
+          download: {
+            text: 'Yuklab olish', // Text displayed on the button
+            click: this.download
+          }
         },
         initialView: 'timeGridWeek',
         locale: 'uz', // Set locale to default (English) or any other supported language
@@ -278,9 +285,6 @@ export default defineComponent({
 
     <!-- Main Calendar -->
     <div class="demo-app-main">
-      <!--      <button @click="switchLocale('uz')">Switch to Uzbek</button>-->
-      <!--      <button @click="switchLocale('en')">Switch to English</button>-->
-      <button class="euenJR" @click="download">  Yuklab Olish </button>
       <FullCalendar
         v-if="showCalendar"
         class="demo-app-calendar"
@@ -335,32 +339,6 @@ export default defineComponent({
 <style lang='css' scoped>
 
 
-.euenJR {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  display: inline-flex;
-  cursor: pointer;
-  max-width: 100%;
-  width: 150px;
-  height: 60px;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  border: 2px solid rgb(138, 0, 25);
-  font-weight: 600;
-  text-align: center;
-  text-transform: uppercase;
-  border-radius: 0px;
-  transition: color 150ms ease-in-out, background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
-  background-color: rgb(255, 255, 255);
-  color: rgb(138, 0, 25);
-}
-.euenJR:hover {
-  background-color: rgb(138, 0, 25);
-  border-color: rgb(138, 0, 25);
-  color: rgb(255, 255, 255);
-}
 h2 {
   margin: 0;
   font-size: 16px;
@@ -383,32 +361,20 @@ b { /* used for event dates/times */
 .demo-app {
   display: flex;
   height: 100vh;
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
   font-size: 14px;
   overflow-y: hidden;
 }
 
-.demo-app-sidebar {
-  width: 300px;
-  line-height: 1.5;
-  background: #eaf9ff;
-  border-right: 1px solid #d3e2e8;
-}
 
-.demo-app-sidebar-section {
-  padding: 2em;
-}
 
 .demo-app-main {
   flex-grow: 1;
   padding: 3em;
   overflow-y: scroll;
+  width: 100%;
 }
 
-.fc { /* the calendar root */
-  max-width: 1100px;
-  margin: 0 auto;
-}
+
 
 .event-details {
   z-index: 1000;

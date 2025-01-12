@@ -37,7 +37,13 @@ export default defineComponent({
           // left: 'prev,next today',
           left: 'today',
           center: 'title',
-          right: 'timeGridWeek,timeGridDay',
+          right: 'timeGridWeek,timeGridDay download',
+        },
+        customButtons: {
+          download: {
+            text: 'Yuklab olish', // Text displayed on the button
+            click: this.download
+          }
         },
         initialView: 'timeGridWeek',
         locale: 'uz', // Set locale to default (English) or any other supported language
@@ -292,7 +298,6 @@ export default defineComponent({
             </option>
           </select>
         </div>
-        <button class="euenJR" @click="download">  Yuklab Olish </button>
       </div>
       <FullCalendar
         v-if="showCalendar"
@@ -394,7 +399,6 @@ b { /* used for event dates/times */
 .demo-app {
   display: flex;
   height: 100vh;
-  font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
   font-size: 14px;
   overflow-y: hidden;
 }
@@ -414,6 +418,7 @@ b { /* used for event dates/times */
   flex-grow: 1;
   padding: 3em;
   overflow-y: scroll;
+  width: 100%;
 }
 
 .fc { /* the calendar root */
