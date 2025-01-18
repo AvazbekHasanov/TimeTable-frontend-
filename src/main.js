@@ -39,4 +39,4 @@ const i18n = createI18n({
 // http://localhost:3000"
 // https://timetable-backend-a5bm.onrender.com
 // https://timetable.prime-core.uz/
-app.use(i18n).provide("baseUrl",  "http://localhost:3000" ).use(router).mount('#app')
+app.use(i18n).provide("baseUrl",  "https://timetable-backend-a5bm.onrender.com" ).use(router).mount('#app')

@@ -28,7 +28,7 @@
       <!-- Modal for Adding Classroom -->
       <div v-if="showModal" class="modal-overlay">
         <div class="modal-content">
-          <h3 class="modal-title">Yangi o'qituvchi qo'shish</h3>
+          <h3 class="modal-title">Yangi auditoriya qo'shish</h3>
           <form @submit.prevent="addClassroom">
             <div style="display: flex;">
               <div class="form-group">
