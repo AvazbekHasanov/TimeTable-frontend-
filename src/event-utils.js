@@ -1,6 +1,5 @@
 let eventGuid = 0;
 
-// Function to create a unique event ID
 export function createEventId() {
   return String(eventGuid++);
 }
@@ -23,7 +22,6 @@ fetch("http://localhost:3000/student/timetable", requestOptions)
   })
   .then((result) => {
     console.log(result);
-    // Map the API response to match the format of INITIAL_EVENTS
     INITIAL_EVENTS = result.result.map((event) => ({
       id: createEventId(), // Generate unique event ID
       title: event.title, // Use the `title` field from the response

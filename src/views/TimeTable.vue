@@ -5,6 +5,9 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SideBar from "../components/SideBar.vue";
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+
 
 export default defineComponent({
   components: {
@@ -48,7 +51,8 @@ export default defineComponent({
         customButtons: {
           download: {
             text: 'Yuklab olish', // Text displayed on the button
-            click: this.download
+            click: this.downloadPDF
+            // click: this.download
           }
         },
         initialView: 'timeGridWeek',
@@ -96,6 +100,42 @@ export default defineComponent({
     this.getTimeTableData();
   },
   methods: {
+    async downloadPDF() {
+      await this.$nextTick(); // Ensure the DOM is updated
+
+      const section = this.$refs.pdfSection;
+
+      if (!section) {
+        console.error('Section is not found or not rendered.');
+        return;
+      }
+
+      // Generate canvas from the section
+      const canvas = await html2canvas(section);
+
+      // Convert canvas to image
+      const imgData = canvas.toDataURL('image/png');
+
+      // Create a new PDF document with landscape orientation
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Adjust image dimensions for landscape orientation
+      const pageWidth = 297; // A4 width in mm for landscape
+      const pageHeight = 210; // A4 height in mm for landscape
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      // Ensure the image fits within the page
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, imgHeight);
+
+      // Save the PDF
+      pdf.save('section-landscape.pdf');
+    },
+
+
     getSlotLabel(date) {
       // Ensure the input is a valid Date object
       if (!(date instanceof Date) || isNaN(date.getTime())) {
@@ -337,7 +377,8 @@ export default defineComponent({
     <SideBar></SideBar>
 
     <!-- Main Calendar -->
-    <div class="demo-app-main">
+    <div class="demo-app-main" ref="pdfSection"
+         id="pdf-section" >
       <div style="width: 100%; display: flex; justify-content: center;">
         <select
           id="teacher-select"

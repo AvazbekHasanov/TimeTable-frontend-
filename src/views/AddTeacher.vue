@@ -1,10 +1,12 @@
 <script>
 import {defineComponent, inject} from 'vue';
 import SideBar from "../components/SideBar.vue";
+import TimeTableComponent from "../components/TimeTableComponent.vue";
 
 
 export default defineComponent({
   components: {
+    TimeTableComponent,
     SideBar
 
   },
@@ -12,7 +14,8 @@ export default defineComponent({
     return {
       courseList: [],
       selectedTeachers: [],
-      baseUrl: null
+      baseUrl: null,
+      teachers: []
     };
   },
 
@@ -20,12 +23,16 @@ export default defineComponent({
     this.baseUrl = inject("baseUrl");
     fetch(`${this.baseUrl}/api/add/teacher`, {}).then(res => res.json()).then(res => {
       console.log(res)
+      this.teachers = res.teachers;
       this.courseList = res.result
     });
   },
   methods: {
     assignTeacher(courseIndex) {
+
       const teacherId = this.selectedTeachers[courseIndex];
+      console.log("teacherId", teacherId)
+      return
       this.courseList[courseIndex].teacher_id = teacherId;
 
       // Optional: Update teacher name dynamically
@@ -48,8 +55,25 @@ export default defineComponent({
         .catch((err) => console.error('Error:', err));
       this.courseList[courseIndex].teacher_name = selectedTeacher ? selectedTeacher.name : null;
     },
+    saveMultiTeachers(course){
+      console.log( course);
+      fetch(`${this.baseUrl}/add/multiple-teachers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          science_group_id: course.id,
+          teachers: course.selected_teachers.map(item => item.teacher_id),
+          course_lesson_type: course.course_lesson_type,
+        })
+      }).then((res) => res.json()).then((res) => {
+        console.log('Response:', res)
+      })
+    },
     toggleEditTeacher(index, status) {
-      this.courseList[index].teacher_id = null;
+      this.courseList[index].teacher_name = null;
+      return
       fetch(`${this.baseUrl}/remove-teacher`, {
         method: 'POST',
         headers: {
@@ -79,6 +103,7 @@ export default defineComponent({
 <SideBar></SideBar>
     <!-- Main Content -->
     <div class="courses-container">
+<!--      <TimeTableComponent header="O'quvchi dars jadvali"/>-->
       <h1 class="header">Fanlar</h1>
       <div class="course-card" v-for="(course, index) in courseList" :key="course.id">
         <h2 class="course-title">{{ course.name }}</h2>
@@ -87,14 +112,17 @@ export default defineComponent({
         <div class="primary-teacher">
           <p><strong>Fan o'qituvchisi:</strong></p>
 
-
-          <div v-if="!course.teacher_id">
-            <select v-model="selectedTeachers[index]" @change="assignTeacher(index)" class="teacher-select">
-              <option disabled value="">Select a teacher</option>
-              <option v-for="teacher in course.teachers" :key="teacher.teacher_id" :value="teacher.teacher_id">
-                {{ teacher.name }}
-              </option>
-            </select>
+          <div v-if="!course.teacher_name">
+            <MultiSelect style="width: 40rem"  v-model="course.selected_teachers" display="chip" :options="teachers" optionLabel="name"
+                         filter placeholder="O'qituvchi tanlash"
+                         class=" md:w-80"  />
+<!--            <select v-model="selectedTeachers" @change="assignTeacher(index)" class="teacher-select" multiple>-->
+<!--              <option disabled value="">Select a teacher</option>-->
+<!--              <option v-for="teacher in course.teachers" :key="teacher.teacher_id" :value="teacher.teacher_id">-->
+<!--                {{ teacher.name }}-->
+<!--              </option>-->
+<!--            </select>-->
+            <Button  @click="saveMultiTeachers(course)"> Saqalsh </Button>
           </div>
           <div class="teacher-view-mode" v-else>
             <p class="teacher-name">{{ course.teacher_name }}</p>

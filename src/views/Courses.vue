@@ -72,7 +72,8 @@ export default {
   mounted() {
     this.baseUrl = inject("baseUrl");
     fetch(`${this.baseUrl}/course/list/admin`).then(response => response.json()).then((data) => {
-      this.courses = data
+      console.log("data", data)
+      this.courses = data.courses
     })
   },
   methods: {

@@ -9,6 +9,12 @@
     "@fullcalendar/interaction": "^6.1.10",
     "@fullcalendar/timegrid": "^6.1.10",
     "@fullcalendar/vue3": "^6.1.10",
+    "@primevue/themes": "^4.2.5",
+    "html2canvas": "^1.4.1",
+    "html2pdf.js": "^0.10.2",
+    "jspdf": "^2.5.2",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.2.5",
     "vue": "^3.2.45",
     "vue-i18n": "^11.0.1",
     "vue-router": "^4.5.0"
