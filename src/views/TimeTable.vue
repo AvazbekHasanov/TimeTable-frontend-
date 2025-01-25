@@ -40,7 +40,7 @@ export default defineComponent({
         // titleFormat: {
         //   year: 'numeric',
         //   month: 'long',
-        //   day: '2-digit',
+        //   day: '2-digit2-digit',
         // },
         headerToolbar: {
           // left: 'prev,next today',
@@ -103,8 +103,13 @@ export default defineComponent({
     async downloadPDF() {
       await this.$nextTick(); // Ensure the DOM is updated
 
-      const section = this.$refs.pdfSection;
+      const section = document.querySelector('.fc-view-harness-active');
+      const todayElements = document.querySelectorAll('.fc-day-today');
 
+      todayElements.forEach(element => {
+        element.style.backgroundColor = 'transparent'; // Set background color to transparent
+      });
+      console.log("section section", section)
       if (!section) {
         console.error('Section is not found or not rendered.');
         return;

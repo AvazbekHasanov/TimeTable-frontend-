@@ -2,14 +2,29 @@ import { createApp } from 'vue'
 import './style.css'
 import DemoApp from './DemoApp.vue'
 import router from './router'
-import PrimeVue from 'primevue/config';
-import Aura from '@primevue/themes/aura';
 
 
-import Button from "primevue/button";
-import MultiSelect from 'primevue/multiselect';
-import DataTable from 'primevue/datatable';
-import Column from 'primevue/column';
+// Vuetify
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import { aliases, mdi } from 'vuetify/iconsets/mdi'; // Optional: For Material Design Icons
+
+const vuetify = createVuetify({
+  icons: {
+    defaultSet: 'mdi',
+    icons: {
+      defaults: 'fa',
+      aliases,
+      sets: { fa, mdi }
+    },
+    aliases,
+    sets: {
+      mdi,
+    },
+  },
+});
+
+
 
 
 import { createI18n } from 'vue-i18n';
@@ -17,18 +32,11 @@ import { createI18n } from 'vue-i18n';
 
 import en from './locales/en.json';
 import uz from './locales/uz.json';
+import {fa} from "vuetify/locale";
  const app = createApp(DemoApp)
 
-app.component('Button', Button);
-app.component('DataTable', DataTable);
-app.component('Column', Column);
-app.component('MultiSelect', MultiSelect);
+app.use(vuetify);
 
-app.use(PrimeVue, {
-  theme: {
-    preset: Aura
-  }
-});
 const i18n = createI18n({
   locale: 'uz', // default locale
   messages: {

@@ -1,17 +1,20 @@
 <script>
-import {defineComponent, inject} from 'vue';
+import { defineComponent, inject } from 'vue';
 import SideBar from "../components/SideBar.vue";
 import TimeTableComponent from "../components/TimeTableComponent.vue";
-
+import Loader from "../components/Loader.vue";
+import Multiselect from 'vue-multiselect';
 
 export default defineComponent({
   components: {
+    Loader,
     TimeTableComponent,
-    SideBar
-
+    SideBar,
+    Multiselect
   },
   data() {
     return {
+      isLoaded: false,
       courseList: [],
       selectedTeachers: [],
       baseUrl: null,
@@ -21,23 +24,32 @@ export default defineComponent({
 
   mounted() {
     this.baseUrl = inject("baseUrl");
-    fetch(`${this.baseUrl}/api/add/teacher`, {}).then(res => res.json()).then(res => {
-      console.log(res)
-      this.teachers = res.teachers;
-      this.courseList = res.result
-    });
-  },
-  methods: {
-    assignTeacher(courseIndex) {
+    this.loadCourseList();
 
+  },
+
+  methods: {
+    loadCourseList() {
+      this.isLoaded = true;
+
+      fetch(`${this.baseUrl}/api/add/teacher`)
+        .then(res => res.json())
+        .then(res => {
+          this.teachers = res.teachers;
+          this.courseList = res.result;
+          this.isLoaded = false;
+        })
+        .catch(err => console.error('Error fetching teachers:', err));
+    },
+    assignTeacher(courseIndex) {
       const teacherId = this.selectedTeachers[courseIndex];
-      console.log("teacherId", teacherId)
-      return
+      if (!teacherId) return; // Check if teacher is selected before proceeding
+
       this.courseList[courseIndex].teacher_id = teacherId;
 
-      // Optional: Update teacher name dynamically
-      const selectedTeacher = this.courseList[courseIndex].teachers.find(
-        (teacher) => teacher.teacher_id === teacherId
+      // Update teacher dynamically
+      const selectedTeacher = this.teachers.find(
+        teacher => teacher.teacher_id === teacherId
       );
       fetch(`${this.baseUrl}/add-teacher`, {
         method: 'POST',
@@ -50,13 +62,16 @@ export default defineComponent({
           course_lesson_type: this.courseList[courseIndex].course_lesson_type,
         }),
       })
-        .then((res) => res.json())
-        .then((res) => console.log('Response:', res))
-        .catch((err) => console.error('Error:', err));
+        .then(res => res.json())
+        .then(res => console.log('Response:', res))
+        .catch(err => console.error('Error:', err));
+
       this.courseList[courseIndex].teacher_name = selectedTeacher ? selectedTeacher.name : null;
     },
-    saveMultiTeachers(course){
-      console.log( course);
+
+    saveMultiTeachers(course) {
+      console.log(course);
+      this.isLoaded = true;
       fetch(`${this.baseUrl}/add/multiple-teachers`, {
         method: 'POST',
         headers: {
@@ -66,14 +81,19 @@ export default defineComponent({
           science_group_id: course.id,
           teachers: course.selected_teachers.map(item => item.teacher_id),
           course_lesson_type: course.course_lesson_type,
-        })
-      }).then((res) => res.json()).then((res) => {
-        console.log('Response:', res)
+        }),
       })
+        .then(res => res.json())
+        .then(res => {
+          console.log('Response:', res);
+          this.loadCourseList();
+        })
+        .catch(err => console.error('Error saving multiple teachers:', err));
     },
-    toggleEditTeacher(index, status) {
+
+    toggleEditTeacher(index) {
       this.courseList[index].teacher_name = null;
-      return
+
       fetch(`${this.baseUrl}/remove-teacher`, {
         method: 'POST',
         headers: {
@@ -82,29 +102,23 @@ export default defineComponent({
         body: JSON.stringify({
           id: this.courseList[index].id,
           course_lesson_type: this.courseList[index].course_lesson_type,
-        })
-      }).then(res => res.json()).then((res) => {
-        console.log('Response:', res)
+        }),
       })
-      .catch((err) => console.error('Error:', err));
-    },
-
-  },
-  beforeUnmount() {
-
-  },
+        .then(res => res.json())
+        .then(res => console.log('Teacher removed:', res))
+        .catch(err => console.error('Error:', err));
+    }
+  }
 });
 </script>
 
 <template>
+  <Loader v-if="isLoaded" />
   <div class="app-layout">
-    <!-- Sidebar -->
-
-<SideBar></SideBar>
-    <!-- Main Content -->
+    <SideBar />
     <div class="courses-container">
-<!--      <TimeTableComponent header="O'quvchi dars jadvali"/>-->
       <h1 class="header">Fanlar</h1>
+
       <div class="course-card" v-for="(course, index) in courseList" :key="course.id">
         <h2 class="course-title">{{ course.name }}</h2>
         <p class="course-detail"><strong>Fan nomi:</strong> {{ course.course_name }}</p>
@@ -112,21 +126,25 @@ export default defineComponent({
         <div class="primary-teacher">
           <p><strong>Fan o'qituvchisi:</strong></p>
 
-          <div v-if="!course.teacher_name">
-            <MultiSelect style="width: 40rem"  v-model="course.selected_teachers" display="chip" :options="teachers" optionLabel="name"
-                         filter placeholder="O'qituvchi tanlash"
-                         class=" md:w-80"  />
-<!--            <select v-model="selectedTeachers" @change="assignTeacher(index)" class="teacher-select" multiple>-->
-<!--              <option disabled value="">Select a teacher</option>-->
-<!--              <option v-for="teacher in course.teachers" :key="teacher.teacher_id" :value="teacher.teacher_id">-->
-<!--                {{ teacher.name }}-->
-<!--              </option>-->
-<!--            </select>-->
-            <Button  @click="saveMultiTeachers(course)"> Saqalsh </Button>
+          <div v-if="!course.teacher_name" style="display: flex; flex-direction: row; gap: 20px; align-items: center;">
+            <Multiselect
+              v-model="course.selected_teachers"
+              :options="teachers"
+              :multiple="true"
+              :close-on-select="false"
+              :clear-on-select="false"
+              :preserve-search="true"
+              placeholder="O'qituvchi tanlash"
+              label="name"
+              track-by="teacher_id"
+              class="teacher-multiselect"
+            />
+            <button @click="saveMultiTeachers(course)" class="save-teachers-btn">Saqlash</button>
           </div>
+
           <div class="teacher-view-mode" v-else>
             <p class="teacher-name">{{ course.teacher_name }}</p>
-            <button @click="toggleEditTeacher(index, true)" class="sc-3035d33f-0 euenJR">O'qituvchini almashtirish</button>
+            <button @click="toggleEditTeacher(index)" class="edit-teacher-btn">O'qituvchini almashtirish</button>
           </div>
         </div>
       </div>
@@ -134,196 +152,137 @@ export default defineComponent({
   </div>
 </template>
 
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 
-<style scoped>
 
-.app-layout{
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  overflow-y: hidden;
-}
+              <style scoped>
 
-.euenJR {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  display: inline-flex;
-  cursor: pointer;
-  max-width: 100%;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
-  border: 2px solid rgb(138, 0, 25);
-  font-weight: 600;
-  text-align: center;
-  text-transform: uppercase;
-  border-radius: 0px;
-  transition: color 150ms ease-in-out, background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
-  background-color: rgb(255, 255, 255);
-  color: rgb(138, 0, 25);
-}
-.euenJR:hover {
-  background-color: rgb(138, 0, 25);
-  border-color: rgb(138, 0, 25);
-  color: rgb(255, 255, 255);
-}
-.sidebar {
-  width: 137px;
-  background: linear-gradient(135deg, #4a90e2, #005792);
-  color: white;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto; /* Enables vertical scrolling */
-  height: 100vh; /* Ensures it takes the full viewport height */
-}
+              .teacher-multiselect {
+                width: 100%;
+                max-width: 40vw;
+              }
 
-.sidebar {
-  width: 15%;
-  background: linear-gradient(135deg, #4a90e2, #005792);
-  color: white;
-  padding: 20px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  overflow-y: auto; /* Enables vertical scrolling */
-  height: 100vh; /* Ensures it takes the full viewport height */
-}
+              .save-teachers-btn, .edit-teacher-btn {
+                background-color: #4CAF50;
+                color: white;
+                padding: 8px 16px;
+                border: none;
+                cursor: pointer;
+              }
 
-/* Sidebar Content */
-.sidebar-section {
-  margin-bottom: 20px;
-}
+              .save-teachers-btn:hover, .edit-teacher-btn:hover {
+                background-color: #45a049;
+              }
 
-.sidebar-header {
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: #fff;
-}
 
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+              .app-layout{
+                display: flex;
+                flex-direction: row;
+                gap: 1rem;
+                overflow-y: hidden;
+              }
 
-.menu-link {
-  display: block;
-  padding: 10px 15px;
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
-  border-radius: 5px;
-  transition: background 0.3s ease, color 0.3s ease;
-}
+              .euenJR {
+                padding: 0.75rem 1.25rem;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                display: inline-flex;
+                cursor: pointer;
+                max-width: 100%;
+                align-items: center;
+                justify-content: center;
+                user-select: none;
+                border: 2px solid rgb(138, 0, 25);
+                font-weight: 600;
+                text-align: center;
+                text-transform: uppercase;
+                border-radius: 0px;
+                transition: color 150ms ease-in-out, background-color 150ms ease-in-out, border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
+                background-color: rgb(255, 255, 255);
+                color: rgb(138, 0, 25);
+              }
+              .euenJR:hover {
+                background-color: rgb(138, 0, 25);
+                border-color: rgb(138, 0, 25);
+                color: rgb(255, 255, 255);
+              }
 
-.menu-link:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #eaf9ff;
-}
+              /* Adjust Main Content */
+              .courses-container {
+                width: 100%;
+                margin-right: 1rem;
+                overflow-y: scroll;
+                height: 100vh;
+              }
 
-/* Adjust Main Content */
-.courses-container {
-  width: 100%;
-  margin-right: 1rem;
-  overflow-y: scroll;
-  height: 100vh;
-}
+              .header {
+                text-align: center;
+                font-size: 28px;
+                margin-bottom: 20px;
+                color: #333;
+              }
 
-.header {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 20px;
-  color: #333;
-}
+              /* Course Card */
+              .course-card {
+                border: 1px solid #e0e0e0;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                padding: 20px;
+                background: #fff;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+              }
 
-/* Course Card */
-.course-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  padding: 20px;
-  background: #fff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
+              .course-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+              }
 
-.course-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
+              .course-title {
+                font-size: 22px;
+                color: #4a90e2;
+                margin-bottom: 10px;
+              }
 
-.course-title {
-  font-size: 22px;
-  color: #4a90e2;
-  margin-bottom: 10px;
-}
+              .course-detail {
+                margin-bottom: 10px;
+                font-size: 16px;
+                color: #555;
+              }
 
-.course-detail {
-  margin-bottom: 10px;
-  font-size: 16px;
-  color: #555;
-}
+              /* Primary Teacher Section */
+              .primary-teacher {
+                margin-top: 15px;
+              }
 
-/* Primary Teacher Section */
-.primary-teacher {
-  margin-top: 15px;
-}
 
-.teacher-select {
-  padding: 10px 15px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  background: #f9f9f9;
-  width: 100%;
-}
+              .teacher-name {
+                font-size: 16px;
+                color: #007BFF;
+                font-weight: bold;
+              }
 
-.teacher-name {
-  font-size: 16px;
-  color: #007BFF;
-  font-weight: bold;
-}
+              .teacher-view-mode {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
 
-.teacher-view-mode {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+              .teacher-name {
+                font-size: 16px;
+                color: #444;
+                font-weight: 500;
+              }
 
-.teacher-name {
-  font-size: 16px;
-  color: #444;
-  font-weight: 500;
-}
+              /* Responsiveness */
+              @media (max-width: 768px) {
+                .app-layout {
+                  flex-direction: column;
+                }
 
-.btn {
-  padding: 6px 12px;
-  font-size: 14px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn.edit {
-  background-color: #4caf50;
-  color: white;
-}
-
-/* Responsiveness */
-@media (max-width: 768px) {
-  .app-layout {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    padding: 15px;
-    text-align: center;
-  }
-
-  .courses-container {
-    padding: 15px;
-  }
-}
-</style>
+                .courses-container {
+                  padding: 15px;
+                }
+              }
+              </style>
 

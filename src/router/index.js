@@ -6,6 +6,7 @@ import Teachers from "../views/Teachers.vue";
 import Courses from "../views/Courses.vue";
 import AcademicGroups from "../views/AcademicGroups.vue";
 import Classrooms from "../views/Classrooms.vue";
+import testVuetify from "../views/testVetify.vue";
 const routes = [
   {
     path: "/",
@@ -36,6 +37,11 @@ const routes = [
     path: "/classrooms",
     name: "Classrooms",
     component: Classrooms,
+  },
+  {
+    path: "/tests",
+    name: "tests",
+    component: testVuetify,
   },
   {
     path: "/academic_group",

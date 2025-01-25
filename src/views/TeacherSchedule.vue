@@ -5,6 +5,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import SideBar from "../components/SideBar.vue";
+import html2canvas from "html2canvas";
+import {jsPDF} from "jspdf";
 
 export default defineComponent({
   components: {
@@ -37,12 +39,16 @@ export default defineComponent({
           // left: 'prev,next today',
           left: 'today',
           center: 'title',
-          right: 'timeGridWeek,timeGridDay download',
+          right: 'timeGridWeek,timeGridDay downloadEXCEL, downloadPDF',
         },
         customButtons: {
-          download: {
-            text: 'Yuklab olish', // Text displayed on the button
+          downloadEXCEL: {
+            text: 'Yuklab olish(.xlsx)', // Text displayed on the button
             click: this.download
+          },
+          downloadPDF: {
+            text: 'Yuklab olish(.pdf)', // Text displayed on the button
+            click: this.downloadPDF
           }
         },
         initialView: 'timeGridWeek',
@@ -311,10 +317,56 @@ export default defineComponent({
     },
     download(){
       window.open(`${this.baseUrl}/download-schedule?teacher_id=${this.selectedTeacher.teacher_id}`, '_blank');
+    },
+    async downloadPDF() {
+      await this.$nextTick(); // Ensure the DOM is updated
+
+      const section = document.querySelector('.fc-view-harness-active');
+      const todayElements = document.querySelectorAll('.fc-day-today');
+
+      todayElements.forEach(element => {
+        element.style.backgroundColor = 'transparent'; // Set background color to transparent
+      });
+
+      if (!section) {
+        console.error('Section is not found or not rendered.');
+        return;
+      }
+
+      // Use a higher scale for better quality
+      const scale = 2; // Adjust this value for higher quality (e.g., 2, 3)
+      const canvas = await html2canvas(section, {
+        scale: scale,
+        useCORS: true, // Ensure cross-origin images are included
+      });
+
+      // Convert canvas to image
+      const imgData = canvas.toDataURL('image/png', 1.0); // Full quality
+
+      // Create a new PDF document with landscape orientation
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Adjust image dimensions for landscape orientation
+      const pageWidth = 297; // A4 width in mm for landscape
+      const pageHeight = 210; // A4 height in mm for landscape
+      const imgHeight = (canvas.height * pageWidth) / canvas.width;
+
+      // Ensure the image fits within the page
+      pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, imgHeight, undefined, 'FAST');
+
+      // Save the PDF
+      pdf.save('section-landscape.pdf');
+      todayElements.forEach(element => {
+        element.style.backgroundColor = ''; // Remove inline style, revert to CSS-defined value
+      });
     }
+
   },
   beforeUnmount() {
-    // Clean up the event listener on component unmount
     document.removeEventListener('click', this.handleOutsideClick);
   },
 });
