@@ -5,36 +5,54 @@
 
     <!-- Main Content -->
     <div class="courses-container">
-      <h1 class="header">Fanlar</h1>
-      <table class="courses-table">
-        <thead>
-        <tr>
-          <th>#</th>
-          <th>Fan nomi</th>
-          <th>Akademik guruh nomi</th>
-          <th>O'quvchi soni</th>
-          <th> O'tiladigan kunlar </th>
-          <th>Amallar</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(course, index) in courseList" :key="course.id">
-          <td>{{ index + 1 }}</td>
-          <td>{{ course.course_name }}</td>
-          <td>{{ course.academic_group_name }}</td>
-          <td>{{ course.student_count }}</td>
-          <td v-if="course.weekdays">{{ course.weekdays }}
-            <img src="../public/icons/icons8-add-50.png" height="50" width="50" alt="test" @click="addToSchedule(course)"/>
-          </td>
-          <td v-else style="display: flex; justify-content: center">
-            <img src="../public/icons/icons8-add-50.png" height="50" width="50" alt="test" @click="addToSchedule(course)"/>
-          </td>
+      <div class="d-flex flex-row justify-lg-space-between align-items-center" style="align-items: center">
+        <h1 class="header h-50">Fanlar</h1>
+        <v-col cols="12" sm="4">
+          <v-select
+              v-model="filtersOptions.selectedGroup"
+              :items="groups"
+              item-value="id"
+              item-title="name"
+              label="Guruh bo'yicha filter"
+              clearable
+              @update:modelValue="getData({page: 1, itemsPerPage:itemsPerPage})"
+          ></v-select>
+        </v-col>
+        <button class="add-btn h-50" @click="openModal">Formani to'ldirish</button>
+      </div>
+      <v-data-table-server
+          v-model:items-per-page="itemsPerPage"
+          :headers="headers"
+          :items="courseList"
+          :items-length="totalCount"
+          :loading="loading"
+          item-value="id"
+          class="elevation-1"
+          @update:options="getData"
+      >
+        <template v-slot:item.index="{ index }">
+          {{ index + 1 }}
+        </template>
 
-          <td> <trash @click="deleteGroup(course, index)"/> </td>
-        </tr>
-        </tbody>
-      </table>
-      <button class="add-btn" @click="openModal">Formani to'ldirish</button>
+        <template v-slot:item.weekdays="{ item }">
+          <div v-if="item.weekdays">
+            {{ item.weekdays }}
+            <v-icon class="cursor-pointer" @click="addToSchedule(item)">mdi-plus-circle</v-icon>
+          </div>
+          <div v-else class="text-center">
+            <v-icon class="cursor-pointer" @click="addToSchedule(item)">mdi-plus-circle</v-icon>
+          </div>
+        </template>
+
+        <template v-slot:item.actions="{ item, index }">
+          <v-btn icon @click="deleteGroup(item, index)">
+            <v-icon color="red">mdi-delete</v-icon>
+          </v-btn>
+          <v-btn icon @click="editAcademicGroup(item, index)">
+            <v-icon color="blue">mdi-pencil</v-icon>
+          </v-btn>
+        </template>
+      </v-data-table-server>
     </div>
 
   </div>
@@ -44,17 +62,36 @@
       <h3 class="modal-title">Yangi akademik guruh qo'shish</h3>
       <form @submit.prevent="addAcademicGroup">
         <div class="form-group">
-          <label for="course">O'tiladigan fan</label>
-          <select id="course" v-model="newAcademicGroup.course_id" required style="width: 100%">
-            <option v-for="course in courses" :key="course.id" :value="course.id">{{course.course_name}}</option>
-          </select>
+          <label for="name">Guruh nomi:</label>
+          <input type="text" id="name" v-model="newAcademicGroup.name" required>
         </div>
         <div class="form-group">
-          <label for="name">Guruh nomi:</label>
-          <input type="text" id="name" v-model="newAcademicGroup.name" required />
+          <label for="course">O'tiladigan fan</label>
+          <select id="course" v-model="newAcademicGroup.course_id" required
+                  style="width: 100%;border: 1px solid;border-radius: 10px;padding: 10px;">
+            <option v-for="course in courses" :key="course.id"
+                    :value="course.id">{{course.course_name}}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="name">Guruhni tanlang</label>
+          <Multiselect
+            v-model="newAcademicGroup.groups"
+            :options="groups"
+            :multiple="true"
+            :close-on-select="false"
+            :clear-on-select="false"
+            :preserve-search="true"
+            placeholder="Guruhni tanlang"
+            label="name"
+            track-by="id"
+            class="teacher-multiselect"
+          />
         </div>
         <div class="form-actions">
-          <button type="submit" class="save-btn">Saqlash</button>
+          <button type="submit" class="save-btn" >Saqlash</button>
           <button type="button" class="cancel-btn" @click="showModal = false">Bekor qilish</button>
         </div>
       </form>
@@ -106,16 +143,17 @@
 </template>
 
 <script>
-import {defineComponent} from 'vue';
+import {defineComponent, inject} from 'vue';
 import SideBar from "../components/SideBar.vue";
-import { inject } from "vue";
 import Trash from "../public/icons/trash.vue";
+import Multiselect from 'vue-multiselect';
 
 
 export default defineComponent({
   components: {
     Trash,
-    SideBar
+    SideBar,
+    Multiselect
 
   },
   data() {
@@ -124,11 +162,28 @@ export default defineComponent({
       courses: [],
       selectedTeachers: [],
       showModal: false,
+      groups: [],
+      headers: [
+        { title: "#", key: "index", sortable: false },
+        { title: "Fan nomi", key: "course_name", sortable: false },
+        { title: "Akademik guruh nomi", key: "academic_group_name", sortable: false },
+        { title: "O'quvchi soni", key: "student_count", sortable: false },
+        { title: "O'tiladigan kunlar", key: "weekdays", sortable: false },
+        { title: "Amallar", key: "actions", sortable: false }
+      ],
+      filtersOptions: {
+        selectedGroup: 0,
+        selectedCourse: null
+      },
+      itemsPerPage: 10,
+      totalCount: 0,
+      loading: false,
       newAcademicGroup: {
         teacher_id: null,
         teacher_name: null,
         name: null,
         course_id: null,
+        groups: [],
       },
       isShowWeekdaysModal: false,
       editedCourse: {
@@ -153,7 +208,7 @@ export default defineComponent({
   },
   mounted() {
     this.baseUrl = inject("baseUrl");
-    this.getData();
+    this.getData({page: 1, itemsPerPage: this.itemsPerPage});
   },
   methods: {
     // Add a new row to the schedule
@@ -163,7 +218,6 @@ export default defineComponent({
     closeScheduleModal(){
       this.isShowWeekdaysModal = false;
     },
-    // Remove a row from the schedule
     removeRow(index) {
       if (this.subjectSchedules[index].id){
         fetch(`${this.baseUrl}/delete/curriculum`, {
@@ -173,7 +227,6 @@ export default defineComponent({
           },
           body: JSON.stringify({id: this.subjectSchedules[index].id})
         }).then(res => res.json()).then((res) => {
-          console.log(res);
           this.subjectSchedules.splice(index, 1);
         })
       }else{
@@ -181,9 +234,14 @@ export default defineComponent({
       }
 
     },
-    getData() {
-      fetch(`${this.baseUrl}/academic/groups`, {}).then(res => res.json()).then(res => {
-        this.courseList = res.result
+    getData({page, itemsPerPage}) {
+      this.loading = true;
+      this.itemsPerPage = itemsPerPage;
+      fetch(`${this.baseUrl}/academic/groups?group=${this.filtersOptions.selectedGroup??0}&limit=${itemsPerPage}&page=${page-1}`, {}).then(res => res.json()).then(res => {
+        this.courseList = res.result.data
+        this.totalCount = res.result.total_count
+        this.getGroups()
+        this.loading = false;
       });
     },
    async addToSchedule(course) {
@@ -211,22 +269,28 @@ export default defineComponent({
         },
         body: JSON.stringify({
           course_id: this.newAcademicGroup.course_id,
-          name: this.newAcademicGroup.name
+          name: this.newAcademicGroup.name,
+          groups: this.newAcademicGroup.groups,
+          id: this.newAcademicGroup.id
         }),
       })
         .then((res) => res.json())
         .then((res) => {
-          console.log('Response:', res)
-          this.getData();
+          this.getData({page: 1, itemsPerPage: this.itemsPerPage});
           this.showModal = false
         })
         .catch((err) => console.error('Error:', err));
       },
-    openModal(){
-      this.showModal = true;
-      fetch(`${this.baseUrl}/course/list/admin`).then(response => response.json()).then((data) => {
-        this.courses = data
+    async getGroups() {
+     await fetch(`${this.baseUrl}/required/data`).then(response => response.json()).then((data) => {
+        this.courses = data.courses
+        this.groups = data.groups
       })
+    },
+   async openModal(){
+      this.newAcademicGroup.groups = this.groups.filter((el) =>
+          this.newAcademicGroup.groups.includes(Number(el.id)))
+      this.showModal = true;
     },
     toggleEditTeacher(index, status) {
       this.courseList[index].teacher_id = null;
@@ -240,12 +304,10 @@ export default defineComponent({
           course_lesson_type: this.courseList[index].course_lesson_type,
         })
       }).then(res => res.json()).then((res) => {
-        console.log('Response:', res)
       })
         .catch((err) => console.error('Error:', err));
     },
     saveSchedule(){
-      console.log(this.editedCourse, this.subjectSchedules);
       fetch(`${this.baseUrl}/schedule/add-event`, {
         method: 'POST',
         headers: {
@@ -257,9 +319,16 @@ export default defineComponent({
           course_id: this.editedCourse.course_id
         })
       }).then(res => res.json()).then((res) => {
-        console.log('Response:', res)
         this.closeScheduleModal()
       })
+    },
+    editAcademicGroup(course ,  index){
+
+      this.newAcademicGroup.course_id = course.course_id;
+      this.newAcademicGroup.id = course.id;
+      this.newAcademicGroup.name  = course.academic_group_name;
+      this.newAcademicGroup.groups = course.groups;
+      this.openModal();
     },
     deleteGroup(course, index){
       if (confirm("O'chirmoqchimisiz ?")) {
@@ -287,9 +356,12 @@ export default defineComponent({
 </script>
 
 <style scoped>
-
+.v-data-table {
+  max-height: 80vh; /* Set the desired height */
+  overflow-y: auto; /* Enable vertical scrolling if the content exceeds the height */
+}
 .add-btn {
-  margin-top: 20px;
+  margin-top: 0 !important;
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -310,12 +382,13 @@ export default defineComponent({
 .courses-container {
   padding: 20px;
   width: 100%;
+  height: 95vh;
+  overflow-y: scroll;
 }
 
 .header {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 20px;
 }
 
 .courses-table {

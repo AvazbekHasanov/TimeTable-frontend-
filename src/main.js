@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
 import './style.css'
+import '@mdi/font/css/materialdesignicons.min.css';
+
 import DemoApp from './DemoApp.vue'
 import router from './router'
 
@@ -47,4 +49,4 @@ const i18n = createI18n({
 // http://localhost:3000"
 // https://timetable-backend-a5bm.onrender.com
 // https://timetable.prime-core.uz/
-app.use(i18n).provide("baseUrl",  "http://localhost:3000" ).use(router).mount('#app')
+app.use(i18n).provide("baseUrl",  "http://localhost:3000/api" ).use(router).mount('#app')

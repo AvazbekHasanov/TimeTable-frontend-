@@ -31,8 +31,6 @@ const timetable = ref([
   { time: '4-para', 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' },
 ]);
 
-console.log(props.header); // Access 'name' prop
-console.log(props.data);  // Access 'age' prop
 </script>
 
 <template>

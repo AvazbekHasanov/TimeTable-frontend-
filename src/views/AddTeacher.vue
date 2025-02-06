@@ -4,6 +4,7 @@ import SideBar from "../components/SideBar.vue";
 import TimeTableComponent from "../components/TimeTableComponent.vue";
 import Loader from "../components/Loader.vue";
 import Multiselect from 'vue-multiselect';
+import {th} from "vuetify/locale";
 
 export default defineComponent({
   components: {
@@ -18,7 +19,11 @@ export default defineComponent({
       courseList: [],
       selectedTeachers: [],
       baseUrl: null,
-      teachers: []
+      teachers: [],
+      filtersOptions: {
+        selectedGroup: 0,
+        selectedCourse: null
+      },
     };
   },
 
@@ -32,10 +37,9 @@ export default defineComponent({
     loadCourseList() {
       this.isLoaded = true;
 
-      fetch(`${this.baseUrl}/api/add/teacher`)
+      fetch(`${this.baseUrl}/add/teacher`)
         .then(res => res.json())
         .then(res => {
-          this.teachers = res.teachers;
           this.courseList = res.result;
           this.isLoaded = false;
         })
@@ -79,7 +83,8 @@ export default defineComponent({
         },
         body: JSON.stringify({
           science_group_id: course.id,
-          teachers: course.selected_teachers.map(item => item.teacher_id),
+          teachers: !!course.selected_teachers && course.selected_teachers.length>0?
+            course.selected_teachers.map(item => item.teacher_id) :[],
           course_lesson_type: course.course_lesson_type,
         }),
       })
@@ -92,21 +97,29 @@ export default defineComponent({
     },
 
     toggleEditTeacher(index) {
-      this.courseList[index].teacher_name = null;
-
-      fetch(`${this.baseUrl}/remove-teacher`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: this.courseList[index].id,
-          course_lesson_type: this.courseList[index].course_lesson_type,
-        }),
+      console.log("this.courseList[index]", this.courseList[index])
+      this.courseList[index]? this.courseList[index].teacher_name = null : true;
+      fetch(`${this.baseUrl}/free/teacher/${this.courseList[index].id}?lesson_type=${this.courseList[index].course_lesson_type}`)
+        .then(res => res.json()).then(res =>{
+        console.log('Response:', res);
+        this.teachers = res.freeTeachers
       })
-        .then(res => res.json())
-        .then(res => console.log('Teacher removed:', res))
-        .catch(err => console.error('Error:', err));
+
+      // fetch(`${this.baseUrl}/remove-teacher`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     id: this.courseList[index].id,
+      //     course_lesson_type: this.courseList[index].course_lesson_type,
+      //   }),
+      // })
+      //   .then(res => res.json())
+      //   .then(res => {
+      //
+      //   })
+      //   .catch(err => console.error('Error:', err));
     }
   }
 });
@@ -117,17 +130,31 @@ export default defineComponent({
   <div class="app-layout">
     <SideBar />
     <div class="courses-container">
-      <h1 class="header">Fanlar</h1>
+      <div class="d-flex flex-row justify-lg-space-between align-items-center" style="align-items: center">
+        <h1 class="header h-50">Fanlar</h1>
+        <v-col cols="12" sm="4">
+          <v-select
+              v-model="filtersOptions.selectedGroup"
+              :items="groups"
+              item-value="id"
+              item-title="name"
+              label="Fan bo'yicha filter"
+              clearable
+              @update:modelValue="getData({page: 1, itemsPerPage:itemsPerPage})"
+          ></v-select>
+        </v-col>
+      </div>
 
       <div class="course-card" v-for="(course, index) in courseList" :key="course.id">
         <h2 class="course-title">{{ course.name }}</h2>
         <p class="course-detail"><strong>Fan nomi:</strong> {{ course.course_name }}</p>
 
-        <div class="primary-teacher">
+        <div class="primary-teacher" v-if="course.course_lesson_type">
           <p><strong>Fan o'qituvchisi:</strong></p>
 
           <div v-if="!course.teacher_name" style="display: flex; flex-direction: row; gap: 20px; align-items: center;">
             <Multiselect
+              @focus="toggleEditTeacher(index)"
               v-model="course.selected_teachers"
               :options="teachers"
               :multiple="true"
@@ -135,7 +162,7 @@ export default defineComponent({
               :clear-on-select="false"
               :preserve-search="true"
               placeholder="O'qituvchi tanlash"
-              label="name"
+              label="teacher_name"
               track-by="teacher_id"
               class="teacher-multiselect"
             />

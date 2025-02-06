@@ -2,7 +2,11 @@
   <div style="display: flex; flex-direction:row;">
     <SideBar></SideBar>
     <div class="table-container">
-      <h2 class="table-title">O'qituvchi ma'lumotlari</h2>
+      <div class="d-flex flex-row justify-lg-space-between">
+        <h2 class="table-title">O'qituvchi ma'lumotlari</h2>
+        <button class="add-btn" @click="showModal = true">Formani to'ldirish</button>
+      </div>
+
       <table class="custom-table">
         <thead>
         <tr>
@@ -23,7 +27,7 @@
         </tr>
         </tbody>
       </table>
-      <button class="add-btn" @click="showModal = true">Formani to'ldirish</button>
+
 
       <!-- Modal for Adding Teacher -->
       <div v-if="showModal" class="modal-overlay">
@@ -120,7 +124,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* General styles */
 .table-container {
   width: 100%;

@@ -7,6 +7,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import SideBar from "../components/SideBar.vue";
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import {getScrollbarWidths} from "@fullcalendar/core/internal";
 
 
 export default defineComponent({
@@ -17,16 +18,7 @@ export default defineComponent({
   data() {
     return {
       showCalendar: false,
-      groupList: [
-        {
-          id: 1,
-          name:'AS1'
-        },
-        {
-          id: 2,
-          name:'XMZSJ1'
-        }
-      ],
+      groupList: [],
       group: 1,
       calendarOptions: {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -51,8 +43,8 @@ export default defineComponent({
         customButtons: {
           download: {
             text: 'Yuklab olish', // Text displayed on the button
-            click: this.downloadPDF
-            // click: this.download
+            // click: this.downloadPDF
+            click: this.download
           }
         },
         initialView: 'timeGridWeek',
@@ -62,14 +54,14 @@ export default defineComponent({
         // Optionally, you can also specify custom day names
         dayHeaderContent: this.customDayHeader,
         initialEvents: null,
-        editable: true,
+        editable: false,
         selectable: false,
         selectMirror: true,
         dayMaxEvents: true,
         weekends: true,
-        slotMinTime: "08:30:00", // First slot starts at 8:30
-        slotMaxTime: "22:00:00", // Adjust end time for your slots
-        slotDuration: "01:35:00", // Duration for each slot
+        slotMinTime: "08:30:00",
+        slotMaxTime: "22:00:00",
+        slotDuration: "01:35:00",
         slotLabelContent: (args) => this.getSlotLabel(args.date),
         eventTimeFormat: {
           hour: '2-digit',
@@ -97,9 +89,16 @@ export default defineComponent({
 
   mounted() {
     this.baseUrl = inject("baseUrl");
-    this.getTimeTableData();
+    this.getGroups()
   },
   methods: {
+    getGroups() {
+      fetch(`${this.baseUrl}/group/list`).then(res => res.json()).then((res) => {
+        this.groupList = res.groups;
+        this.group = this.groupList[0].id;
+        this.getTimeTableData();
+      })
+    },
     async downloadPDF() {
       await this.$nextTick(); // Ensure the DOM is updated
 
@@ -190,7 +189,7 @@ export default defineComponent({
     },
     getTimeTableData() {
       this.showCalendar = false;
-      let url = this.group? `${this.baseUrl}/student/timetable?student_id=${this.group}`:`${this.baseUrl}/student/timetable`
+      let url = this.group? `${this.baseUrl}/student/timetable?group_id=${this.group}`:`${this.baseUrl}/student/timetable`
       fetch(url)
         .then((response) => {
           if (!response.ok) {
@@ -199,7 +198,6 @@ export default defineComponent({
           return response.json();
         })
         .then((result) => {
-          // Map the API response to match the FullCalendar event format
           const events = result.result.map((event) => ({
             id: event.id,
             title: event.title,
@@ -213,7 +211,6 @@ export default defineComponent({
 
           // Update calendar options with the new events
           this.calendarOptions.initialEvents = events;
-          console.log('Updated initialEvents:', events);
           this.showCalendar = true;
         })
         .catch((error) => console.error('Error fetching timetable:', error));
@@ -325,7 +322,6 @@ export default defineComponent({
         let left = clientX;
         let top = clientY + offsetY; // Position below the mouse cursor
 
-        // Boundary checks for horizontal (left and right)
         if (left + popupWidth > window.innerWidth) {
           left = window.innerWidth - popupWidth - 10; // Add a 10px buffer from the right edge
         }
@@ -333,7 +329,6 @@ export default defineComponent({
           left = 0; // Align to the left edge
         }
 
-        // Boundary checks for vertical (top and bottom)
         if (top + popupHeight > window.innerHeight) {
           top = clientY - popupHeight - offsetY; // Position above the mouse cursor if there's no space below
         }
@@ -356,7 +351,7 @@ export default defineComponent({
       this.$i18n.locale = locale;
     },
     download() {
-      window.open(`${this.baseUrl}/download-schedule`, '_blank');
+      window.open(`${this.baseUrl}/download-schedule?student_id=${this.group}`, '_blank');
     }
   },
   beforeUnmount() {
@@ -405,7 +400,7 @@ export default defineComponent({
         :dayHeaderContent="customDayHeader"
       >
         <template v-slot:eventContent="arg">
-          <b>{{ arg.timeText }}</b>
+          <b>{{ arg.event.extendedProps.teacher }}</b>
           <br>
           <br>
           <i>{{ arg.event.title }}</i>

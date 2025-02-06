@@ -58,7 +58,7 @@ export default defineComponent({
         // Optionally, you can also specify custom day names
         dayHeaderContent: this.customDayHeader,
         initialEvents: null,
-        editable: true,
+        editable: false,
         selectable: false,
         selectMirror: true,
         dayMaxEvents: true,
@@ -166,7 +166,7 @@ export default defineComponent({
     },
     getTimeTableData(){
       this.showCalendar = false;
-      fetch(`${this.baseUrl}/student/timetable?teacher_id=${this.selectedTeacher.teacher_id}`)
+      fetch(`${this.baseUrl}/teacher/timetable?teacher_id=${this.selectedTeacher.teacher_id}`)
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
